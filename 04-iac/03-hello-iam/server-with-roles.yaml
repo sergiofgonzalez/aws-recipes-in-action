@@ -1,0 +1,126 @@
+# Template to create a server with an inline policy that allows it to stop it itself
+# through a user data script
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "EC2 instance that stops itself after a configured number of minutes"
+
+# Input parameters for the stack
+Parameters:
+
+  # The key pair for the server
+  KeyName:
+    Description: "Key Pair Name for SSH access"
+    Type: "AWS::EC2::KeyPair::KeyName"
+    Default: aws-in-action-key-pair
+    ConstraintDescription: "Must be the name of an existing key pair"
+
+  # The VPC on which to create the server
+  VPC:
+    Description: "Select the VPC for your server"
+    Type: "AWS::EC2::VPC::Id"
+
+  # The Subnet on which to create the server
+  Subnet:
+    Description: "Select the subnet for your server"
+    Type: "AWS::EC2::Subnet::Id"
+
+  # Configured lifetime of the instance
+  Lifetime:
+    Description: "Lifetime in minutes (5-59)"
+    Type: Number
+    Default: 5
+    MinValue: 2
+    MaxValue: 59
+
+# Key-value maps that will be used in the resources section
+Mappings:
+
+  # Map that takes a region and maps it to the AMI ID of the Ubuntu 64 bit image
+  AWSRegionToAMI:
+    us-east-1:
+      ubuntu64bit: ami-6edd3078    
+    us-east-2:
+      ubuntu64bit: ami-fcc19b99
+
+# The Actual infrastructure resources
+Resources:
+
+  # Security Groups for the server
+  SecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security Group for the instance that stops itself"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "0.0.0.0/0"
+  # Role
+  Role:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - 
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "ec2.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "ec2"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:  
+              - Effect: "Allow"
+                Action: 
+                  - "ec2:StopInstances"
+                Resource: "*"
+
+                # A condition in a policy limits its statement's effect when the condition is satisfied
+                Condition: 
+                  StringEquals:
+                    "ec2:ResourceTag/aws:cloudformation:stack-id": !Ref "AWS::StackId"
+
+
+  # InstanceProfile
+  InstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      Roles: 
+        - !Ref Role
+
+
+  EC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: "t2.micro"
+      IamInstanceProfile: !Ref InstanceProfile
+      SecurityGroupIds: 
+        - !Ref SecurityGroup
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap [ AWSRegionToAMI , !Ref "AWS::Region", ubuntu64bit ]
+      SubnetId: !Ref Subnet
+      
+      UserData:
+        "Fn::Base64": !Sub |
+          #!/bin/bash -xe
+          apt-get -y update
+          apt-get -y install python-pip
+          pip install awscli
+          INSTANCE_ID=$(curl -s http://169.254.169.254/latest/meta-data/instance-id)
+          echo "aws --region us-east-2 ec2 stop-instances --instance-ids $INSTANCE_ID" | at now + ${Lifetime} minutes
+
+# Output information of the stack
+Outputs:
+  
+  ServerIP:
+    Description: "Public IP address of the server"
+    Value: !GetAtt EC2Instance.PublicDnsName
+  

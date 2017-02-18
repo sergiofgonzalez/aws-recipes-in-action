@@ -1,0 +1,123 @@
+# Template to create a server with an inline policy that allows inbound icmp traffic
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Implementing bastion host with AWS"
+
+# Input parameters for the stack
+Parameters:
+
+  # The key pair for the server
+  KeyName:
+    Description: "Key Pair Name for SSH access"
+    Type: "AWS::EC2::KeyPair::KeyName"
+    Default: aws-in-action-key-pair
+    ConstraintDescription: "Must be the name of an existing key pair"
+
+  IpForSSH:
+    Description: "Select the IP address from which you will be able to SSH into the instance"
+    Type: "String"
+
+  # The VPC on which to create the server
+  VPC:
+    Description: "Select the VPC for your server"
+    Type: "AWS::EC2::VPC::Id"
+
+  # The Subnet on which to create the server
+  Subnet:
+    Description: "Select the subnet for your server"
+    Type: "AWS::EC2::Subnet::Id"
+
+
+# Key-value maps that will be used in the resources section
+Mappings:
+
+  # Map that takes a region and maps it to the AMI ID of the Ubuntu 64 bit image
+  AWSRegionToAMI:
+    us-east-1:
+      ubuntu64bit: ami-6edd3078    
+    us-east-2:
+      ubuntu64bit: ami-fcc19b99
+
+# The Actual infrastructure resources
+Resources:
+
+  # Security Group Public: The security group to be used in the Bastion host
+  SecurityGroupPublic:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security Group for filtering public traffic"
+      VpcId: !Ref VPC
+
+  # Rule for allowing ICMP for a given IPv4 address
+  AllowInboundICMP:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref SecurityGroupPublic
+      IpProtocol: icmp
+      FromPort: -1
+      ToPort: -1
+      CidrIp: !Join ["", [ !Ref IpForSSH, "/32" ] ]
+
+  # Rule for allowing SSH for a given IPv4 address
+  AllowInboundSSH:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref SecurityGroupPublic
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: !Join ["", [ !Ref IpForSSH, "/32" ] ]
+
+  # The Security Group to be used in the application servers
+  SecurityGroupPrivate:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security Group defined for filtering out public traffic"
+      VpcId: !Ref VPC
+  
+  # Rule for allowing SSH into the application servers
+  AllowPrivateInboundSSH:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !Ref SecurityGroupPrivate
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref SecurityGroupPublic
+
+  BastionHost:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: "t2.micro"
+      SecurityGroupIds: 
+        - !Ref SecurityGroupPublic
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap [ AWSRegionToAMI , !Ref "AWS::Region", ubuntu64bit ]
+      SubnetId: !Ref Subnet
+      Tags:
+        - Key: Name
+          Value: "Bastion Host"      
+
+  AppServer1:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: "t2.micro"
+      SecurityGroupIds: 
+        - !Ref SecurityGroupPrivate
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap [ AWSRegionToAMI , !Ref "AWS::Region", ubuntu64bit ]
+      SubnetId: !Ref Subnet
+      Tags:
+        - Key: Name
+          Value: "App Server #1"      
+
+# Output information of the stack
+Outputs:
+  
+  BastionHostDns:
+    Description: "Public IP address of the Bastion Host"
+    Value: !GetAtt BastionHost.PublicDnsName
+  
+  AppServer1Dns:
+    Description: "Public IP address of the App Server 1"
+    Value: !GetAtt AppServer1.PublicDnsName

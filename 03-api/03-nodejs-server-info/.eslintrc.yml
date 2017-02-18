@@ -1,0 +1,23 @@
+env:
+  es6: true
+  node: true
+extends: 'eslint:recommended'
+rules:
+  indent:
+    - error
+    - 2
+    - SwitchCase: 1
+  linebreak-style:
+    - error
+    - unix
+  no-console:
+    - off       # switched from warn as it's used for perf metrics
+  quotes:
+    - error
+    - double
+    - allowTemplateLiterals: true
+  semi:
+    - error
+    - always
+  callback-return:
+    - error

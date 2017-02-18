@@ -1,0 +1,40 @@
+{
+  "name": "03-node-js-list-servers",
+  "version": "0.0.0",
+  "description": "Listing Servers with a Node.js application",
+  "engines": {
+    "node": "6.9.5",
+    "npm": "3.10.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "TBD"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Sergio F. Gonzalez",
+    "email": "sergio.f.gonzalez@gmail.com"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "3.13.0"
+  },
+  "dependencies": {
+    "aws-sdk": "2.9.0",
+    "jmespath": "0.15.0",
+    "js-yaml": "3.7.0",
+    "log4js": "1.1.0",
+    "nconf": "0.8.4"
+  },
+  "scripts": {
+    "start": "node build/index.js",
+    "lint": "eslint src/",
+    "clean": "rm -rf build/",
+    "copy": "cp -r src/ build/",
+    "build": "npm run lint",
+    "prebuild": "npm run clean",
+    "postbuild": "npm run copy",
+    "debug": "node --inspect --debug-brk build/index.js",
+    "dev": "nodemon --ext js,json,yml --watch src/ --watch .eslintrc.yml --exec 'npm run build && npm start'"
+  }
+}

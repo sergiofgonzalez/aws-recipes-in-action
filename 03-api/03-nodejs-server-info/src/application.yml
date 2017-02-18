@@ -1,0 +1,10 @@
+#
+## Application Properties
+#
+
+LOGGER:
+  LEVEL: TRACE
+
+AWS:
+  PROFILE: hackathon
+  REGION: us-east-2

@@ -1,0 +1,79 @@
+# Template to create a server with an inline policy that allows inbound icmp traffic
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "EC2 instance with a security group allowing ICMP traffic"
+
+# Input parameters for the stack
+Parameters:
+
+  # The key pair for the server
+  KeyName:
+    Description: "Key Pair Name for SSH access"
+    Type: "AWS::EC2::KeyPair::KeyName"
+    Default: aws-in-action-key-pair
+    ConstraintDescription: "Must be the name of an existing key pair"
+
+  # The VPC on which to create the server
+  VPC:
+    Description: "Select the VPC for your server"
+    Type: "AWS::EC2::VPC::Id"
+
+  # The Subnet on which to create the server
+  Subnet:
+    Description: "Select the subnet for your server"
+    Type: "AWS::EC2::Subnet::Id"
+
+# Key-value maps that will be used in the resources section
+Mappings:
+
+  # Map that takes a region and maps it to the AMI ID of the Ubuntu 64 bit image
+  AWSRegionToAMI:
+    us-east-1:
+      ubuntu64bit: ami-6edd3078    
+    us-east-2:
+      ubuntu64bit: ami-fcc19b99
+
+# The Actual infrastructure resources
+Resources:
+
+  # Security Groups for the server
+  AllowInboundICMPSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security Group that allows ICMP traffic"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: "0.0.0.0/0"
+  
+  AllowInboundSSHSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security Group that allows SSH traffic"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "0.0.0.0/0"
+
+  EC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: "t2.micro"
+      SecurityGroupIds: 
+        - !Ref AllowInboundICMPSecurityGroup
+        - !Ref AllowInboundSSHSecurityGroup
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap [ AWSRegionToAMI , !Ref "AWS::Region", ubuntu64bit ]
+      SubnetId: !Ref Subnet
+
+# Output information of the stack
+Outputs:
+  
+  ServerIP:
+    Description: "Public IP address of the server"
+    Value: !GetAtt EC2Instance.PublicDnsName
+  

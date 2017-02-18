@@ -1,0 +1,76 @@
+# Template to create an EC2 virtual server with CloudFormation
+
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Creating an EC2 virtual server with CloudFormation Template"
+
+# Input parameters for the stack
+Parameters:
+
+  # The key pair for the server
+  KeyName:
+    Description: "Key Pair Name"
+    Type: "AWS::EC2::KeyPair::KeyName"
+    Default: aws-in-action-key-pair
+
+  # The VPC on which to create the server
+  VPC:
+    Description: "Select the VPC for your server"
+    Type: "AWS::EC2::VPC::Id"
+
+  # The Subnet on which to create the server
+  Subnet:
+    Description: "Select the subnet for your server"
+    Type: "AWS::EC2::Subnet::Id"
+
+  # The server type
+  InstanceType:
+    Description: "Select the instance type for your server"
+    Type: "String"
+    Default: "t2.micro"
+    AllowedValues: 
+      - t2.micro
+      - t2.small
+      - t2.medium
+
+# Key-value maps that will be used in the resources section
+Mappings:
+
+  # Map that takes a region and maps it to the AMI ID of the Ubuntu 64 bit image
+  AWSRegionToAMI:
+    us-east-1:
+      ubuntu64bit: ami-6edd3078    
+    us-east-2:
+      ubuntu64bit: ami-fcc19b99
+
+# The Actual infrastructure resources
+Resources:
+
+  # Security Groups for the server
+  SecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "Security Group created from CloudFormation"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "0.0.0.0/0"
+
+  # The Server configuration
+  Server:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      # The ImageID is the result of mapping the Region to the AMI using the `AWSRegionToAMI`
+      ImageId: !FindInMap [ AWSRegionToAMI , !Ref 'AWS::Region', ubuntu64bit ]
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SecurityGroupIds: 
+        - !Ref SecurityGroup
+      SubnetId: !Ref Subnet
+
+# Output information of the stack
+Outputs:
+  PublicName:
+    Value: !GetAtt Server.PublicDnsName
+    Description: "Public Name of the recently created server"
