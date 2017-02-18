@@ -1,0 +1,6 @@
+*.pem
+node_modules
+build
+*.log
+.vscode
+application.yml
