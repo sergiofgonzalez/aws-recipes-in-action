@@ -355,16 +355,18 @@ Let's take a look at the default VPC configuration for a recently created accoun
   + 172.31.32.0/20, in AZ 2c, same route table as VPC, same ACL table as VPC, default subnet, auto-assign public IP: YES
 + **Route Tables:** attached to VPC, not explicitly associated to specific subnets
   + *Route 1:* 172.31.0.0/16, target: local &mdash; allows access between instances in the different VPC subnets
-  + *Route 2:* 0.0.0.0/0, target: Internet gateway (IGW)
+  + *Route 2:* 0.0.0.0/0, target: Internet gateway (IGW); allow access of the instances to the public Internet
 + **Internet Gateway:** attached to VPC
 + **DHCP Options set:** the rules used to assign names to the EC2 servers
 + **Network ACLs:** attached to VPC and its subnets
-  + *Inbound Rules:*
-    + Rule #100 &mdash; ALL Traffic &mdash; ALL Protocol; &mdash; ALL Ports mdash; Source=0.0.0.0/0 &mdash; ALLOW
-    + Rule *    &mdash; ALL Traffic &mdash; ALL Protocol; &mdash; ALL Ports mdash; Source=0.0.0.0/0 &mdash; DENY
-  + *Outbound Rules:*
-    + Rule #100 &mdash; ALL Traffic &mdash; ALL Protocol; &mdash; ALL Ports mdash; Source=0.0.0.0/0 &mdash; ALLOW
-    + Rule *    &mdash; ALL Traffic &mdash; ALL Protocol; &mdash; ALL Ports mdash; Source=0.0.0.0/0 &mdash; DENY
+  
+  | Rule # | Protocol | Port Range | In/out   | Source/Destination | Allow/Deny |
+  | ------ | -------- | ---------- | -------- | ------------------ | ---------- |
+  | 100    | ALL      | ALL        | inbound  | 0.0.0.0/0 (source) | ALLOW      |
+  | *      | ALL      | ALL        | inbound  | 0.0.0.0/0 (source) | DENY       |
+  | 100    | ALL      | ALL        | outbound | 0.0.0.0/0 (dest)   | ALLOW      |
+  | *      | ALL      | ALL        | outbound | 0.0.0.0/0 (dest)   | DENY       |
+
 + **Security Groups:**
   + *Inbound:* allow traffic coming from instances in the VPC (associated to default security group)
   + *Outbound:* allow all traffic
