@@ -274,6 +274,74 @@ You can also enable Internet access for an instance launched into a non-default 
 
 Alternatively, to allow an instance in your VPC to initiate outbound connections but prevent unsolicited inbound connections, you can use a *network address translation (NAT)* device for IPv4 traffic. Using NAT you can map multiple private IPv4 addresses to a single IPv4 address. A NAT device has an elastic IP address and is connected to the Internet through an Internet gateway. You can connect an instance in a private subnet to the Internet through the NAT device, which will route traffic from the instance to the Internet gateway, and will also route any responses to the instance.
 
+### Subnet Routing: Route Tables
+Each subnet must be associated with a route table, which specifies the allowed routes for outbound traffic leaving the subnet.
+Every subnet is automatically associated with a default route that allows the communication between other instances on the same VPC.
+
+A *route table* contains a set of rules, called routes, that are used to determine where network traffic is directed. A subnet can only be associated with one route table at a time, but multiple subnets can be associated with the same route table.
+
+When you create a VPC, it automatically has a main route table. The main route table controls the routing for all subnets that are not explicitly associated with any other route table. Additional rules can be added to the main route table.
+
+A VPC can have route tables other than the default one. It is a good practice to leave the main route table as is (with only the local route) and explicitly associate each new subnet with one custom route table. This ensures that you explicitly control how each subnet routes outbound traffic.
+
+AWS uses the most specific route in the route table that matches the traffic to determine how to route the traffic (longest prefix match).
+For example, if a route table for a VPC contains:
+| Destination      | Target        |
+| ---------------- |-------------- |
+| `172.31.0.0./16` | local         |
+| `0.0.0.0./16`    | igw-xyz       |
+
+Any traffic directed to an EC2 instance in the VPC will use the first rule (local), while traffic outside of the VPC will use the Internet Gateway.
+
+### Network ACLs
+AWS provides two features that you can use to increase security in your VPC: security groups and network ACLs. Security Groups control inbound and outbound traffic for EC2 instances, while network ACLs control inbound and outbound traffic for your subnets.
+In most cases, security groups can meet your needs, however, you can use network ACLs for an additional layer of security for your VPC (for example, if you forget to attach a recently created instance an appropriate security group).
+
+These are the basic things you need to know about network ACLs:
++ Your VPC comes with a modifiable default network ACL that allows all inbound and outbound IPv4 traffic.
++ You can create a custom network ACL and associate it with a subnet. By default, each custom network ACL denies all inbound and outbound traffic until you add rules.
++ A network ACL contains a numbered list of rules that are evaluated in order starting with the lowest numbered rule, to determine whether traffic is allowed in or our of any subnet associated with the network ACL. It's recommended to create rules with numbers that are multiple of 100.
++ A network ACL has separate inbound and outbound rules, and each rule can either allow or deny traffic.
+
+These are the rules defined for your default VPC:
+| Rule # | Protocol | Port Range | Egress | Source/Destination | Allow/Deny |
+| ------ | -------- | ---------- | ------ | ------------------ | ---------- |
+| 100    | ALL      | ALL        | false  | 0.0.0.0/0 (source) | ALLOW      |
+| *      | ALL      | ALL        | false  | 0.0.0.0/0 (source) | DENY       |
+| 100    | ALL      | ALL        | true   | 0.0.0.0/0 (dest)   | ALLOW      |
+| *      | ALL      | ALL        | false  | 0.0.0.0/0 (dest)   | DENY       |
+
+As a result, all inbound and outbound traffic in your VPC will be allowed.
+
+Note that:
++ Rule Number &mdash; the index in which the rule are evaluated (starting with the lowest).
++ Protocol &mdash; the protocol number as found in http://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml, or -1 for ALL.
++ The rule with an asterisk `*` is the fallback rule that ensures that if a packet doesn't match any of the other number rules, it's denied.
+
+For example, the following template describes the rules of the table above:
+```yaml
+  NetworkAclEntryInbound:
+    Type:  "AWS::EC2::NetworkAclEntry"
+    Properties:
+      NetworkAclId: !Ref NetworkAclPublicSubnet
+      Egress: false     # inbound
+      RuleNumber: 100
+      Protocol: "-1"    # ALL
+      RuleAction: allow
+      CidrBlock: "0.0.0.0/0"
+
+  NetworkAclEntryOutbound:
+    Type:  "AWS::EC2::NetworkAclEntry"
+    Properties:
+      NetworkAclId: !Ref NetworkAclPublicSubnet
+      Egress: true     # inbound
+      RuleNumber: 100
+      Protocol: "-1"    # ALL
+      RuleAction: allow
+      CidrBlock: "0.0.0.0/0"
+```
+
+
 ### The Configuration of a Default VPC
 Let's take a look at the default VPC configuration for a recently created account for the `us-east-2` (Ohio) region:
 + VPC (default), CIDR: 172.31.0.0/16, assigned DHCP options set, Route Table, Network ACL
