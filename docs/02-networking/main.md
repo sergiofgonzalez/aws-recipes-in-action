@@ -286,6 +286,7 @@ A VPC can have route tables other than the default one. It is a good practice to
 
 AWS uses the most specific route in the route table that matches the traffic to determine how to route the traffic (longest prefix match).
 For example, if a route table for a VPC contains:
+
 | Destination      | Target        |
 | ---------------- |-------------- |
 | `172.31.0.0./16` | local         |
@@ -304,6 +305,7 @@ These are the basic things you need to know about network ACLs:
 + A network ACL has separate inbound and outbound rules, and each rule can either allow or deny traffic.
 
 These are the rules defined for your default VPC:
+
 | Rule # | Protocol | Port Range | Egress | Source/Destination | Allow/Deny |
 | ------ | -------- | ---------- | ------ | ------------------ | ---------- |
 | 100    | ALL      | ALL        | false  | 0.0.0.0/0 (source) | ALLOW      |
