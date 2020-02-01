@@ -1,7 +1,19 @@
 # The CLI &raquo; Using AWS Command Line Interface
-> misc notes about CLI usage
+> interacting with AWS through the CLI
 
 ## Description
+This folder contains examples of how to interact with AWS from your terminal using the CLI.
+
+### Launch a Short-Lived EC2 Machine using a Bash Script
+The bash script [launch-short-lived-ec2.sh](./launch-short-lived-ec2.sh) is a simple script that uses the AWS CLI to:
+* Launch a new EC2 machine
+* Connect to the new VM using SSH
+* Wait for the user response to complete their tasks
+* Clean up the created resources (namely EC2 machine and security group)
+
+
+
+
 The shell script `create-short-live-temp-ubuntu-vm.sh` demonstrates how to spin up an EC2 virtual server using a shell script.
 The script requires two parameters:
 + `AMI_ID` &mdash; the image id to use for the EC2 instance
