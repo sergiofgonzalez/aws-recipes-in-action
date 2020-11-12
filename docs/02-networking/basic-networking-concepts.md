@@ -30,6 +30,10 @@ The following IPv4 addresses are also reserved:
 + `0.0.0.0` &mdash; unspecified IPv4 address (indicates absence of an address)
 + `127.0.0.1` &mdash; the IPv4 loopback address (enables a node lo send packets to itself)
 
+| NOTE: |
+| :---- |
+| an IPv4 address is comprised of the *subnet prefix* (the part of the IP address range specification that do not change) and the *host id* (the part that changes). |
+
 Apart from that, there are specific rules you should follow when assigning addresses and subnet prefixes in an organization:
 1. The subnet prefix must be unique within the IPv4 network
 2. The subnet prefix cannot begin with the numbers 0 or 127
@@ -47,7 +51,7 @@ For example, for 192.168.16.0/20:
 ## Summary
 + IPv4 address is expressed in dotted decimal notation as w.x.y.z
 + IPv4 ranges are expressed in CIDR notation as w.x.y.z/N where N is the number of high-order bits which are fixed
-+ Public IPv4 addresses are: w.x.y.z with w=1-126 and 128-223
++ Public IPv4 addresses are: w.x.y.z with w=1-126 and 128-223, except for w=[10, 172, 192] which are private prefixes
 + Private IPv4 addresses are:
   + `10.0.0.0/8`
   + `172.16.0.0/12`
