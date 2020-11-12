@@ -8,7 +8,7 @@ Let's dive a little deeper around these concepts.
 
 An IPv4 address is a 32-digit string of 1s and 0s, but it is typically expressed in *dotted decimal notation*, in which dots separate four decimal numbers from 0 to 255. Each decimal number represents 8 bits of the 32 bit address (`w.x.y.z`).
 
-Each bit of a unique IPv4 address has a defined value. However, IPv4 address prefixed express ranges of IPv4 addresses in which zero or more of the high-order bits are fixed at specific values and the rest of the low-order variable bits are set to zero. Adress prefixes are commonly expressed using the Prefix Length Notation: `StartingAddress/PrefixLength`, where `StartingAddress` is the dotted decimal expression of the first mathematically possible address in range, with the fixed bits at their defined values and the remaining bits to 0, and `PrefixLength` is the number of high-order bits in the address that are fixed.
+Each bit of a unique IPv4 address has a defined value. However, IPv4 address prefixes express ranges of IPv4 addresses in which zero or more of the high-order bits are fixed at specific values and the rest of the low-order variable bits are set to zero. Adress prefixes are commonly expressed using the Prefix Length Notation: `StartingAddress/PrefixLength`, where `StartingAddress` is the dotted decimal expression of the first mathematically possible address in range, with the fixed bits at their defined values and the remaining bits to 0, and `PrefixLength` is the number of high-order bits in the address that are fixed.
 
 For example, the IPv4 address prefix 131.107.0.0/16 specifies a range of 65_536 addresses starting from 131.107.0.0. This notation is also known as Classless Inter-Domain Routing notation or CIDR for short.
 
