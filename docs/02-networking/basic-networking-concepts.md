@@ -21,7 +21,7 @@ For this reason, a private network should never use those ranges.
 In private networks, not all the hosts require direct connectivity to the internet: only routers, servers, proxies, firewalls... do require such access but laptops, desktops, tablets, phones, etc. can proxy their access to the Internet.
 For private networks, the Internet designers reserved a portion of the IPv4 address spaces for private address, and those are never assigned as public addresses, so that public and private addresses never overlap.
 
-The following ranges are reserved for address space:
+The following ranges are reserved for the private address space:
 + `10.0.0.0/8` &mdash; which allows addresses from 10.0.0.1 to 10.255.255.254 (24 host bits)
 + `172.16.0.0/12` &mdash; which allows addresses from 172.16.0.1 to 172.31.255.254 (20 host bits)
 + `192.168.0.0/16` &mdash; which allows addresses from 192.168.0.1 to 192.168.255.254 (16 host bits)
